@@ -24,222 +24,11 @@ import os
 # In[3]:
 
 
-data_path = os.path.join(os.path.dirname(__file__), "spam_NLP.csv")
+data_path = os.path.join(os.path.dirname(__file__), "spam_NLP_processed.csv")
 df = pd.read_csv(data_path)
 
 
-# In[69]:
-
-
-print("=== 1. Sprawdzenie brakujących danych (missing values) ===")
-print("Liczba brakujących wartości w każdej kolumnie:")
-print(df.isnull().sum())
-print("\nCałkowita liczba brakujących wartości w zbiorze:", df.isnull().sum().sum())
-
-print("\n=== 2. Sprawdzenie duplikatów ===")
-# Pełne duplikaty wierszy (identyczne CATEGORY + MESSAGE)
-full_duplicates = df.duplicated().sum()
-print(f"Liczba pełnych duplikatów wierszy: {full_duplicates}")
-
-# Duplikaty tylko w kolumnie MESSAGE (niezależnie od kategorii)
-message_duplicates = df['MESSAGE'].duplicated().sum()
-print(f"Liczba duplikatów samych wiadomości (kolumna MESSAGE): {message_duplicates}")
-print(f"\nLiczba wierszy przed usunięciem duplikatów: {len(df)}")
-
-print("\n=== 3. Usunięcie duplikatów ===")
-# Usunięcie pełnych duplikatów wierszy
-df = df.drop_duplicates()
-
-print(f"Liczba wierszy po usunięciu duplikatów: {len(df)}")
-
-
-# In[3]:
-
-
-print("Liczba wszystkich wiadomości:", len(df))
-print("\n=== 1. Liczba próbek w każdej klasie ===")
-print(df['CATEGORY'].value_counts().sort_index())
-
-
-# In[62]:
-
-
-hamSpamShare = df['CATEGORY'].value_counts().sort_index()/len(df)
-hamSpamShare
-
-
-# In[5]:
-
-
-df['length'] = df['MESSAGE'].str.len()
-
-print("\n=== 2. Rozkład długości wiadomości ===")
-print(df['length'].describe())
-
-
-# In[57]:
-
-
-print("Ogólna mediana długości:", df['length'].median())
-
-# Statystyki dla HAM (kategoria 0)
-ham = df[df['CATEGORY'] == 0]
-print("\nHAM (0) średnia długości:", ham['length'].describe())
-print("HAM (0) mediana długości:", ham['length'].median())
-
-# Statystyki dla SPAM (kategoria 1)
-spam = df[df['CATEGORY'] == 1]
-print("\nSPAM (1) średnia długości:", spam['length'].describe())
-print("SPAM (1) mediana długości:", spam['length'].median())
-
-
-# In[55]:
-
-
-print("\n=== 3. Przykłady wiadomości ===")
-
-print("\nPrzykładowe wiadomości SPAM (CATEGORY = 1):")
-spam_examples = df[df['CATEGORY'] == 1].sample(n=3, random_state=20)  # 3 losowe przykłady
-for i, row in spam_examples.iterrows():
-    print(f"\n--- Przykład {i} (długość: {row['length']} znaków) ---")
-    print(row['MESSAGE'][:500] + "..." if len(row['MESSAGE']) > 500 else row['MESSAGE'])
-
-print("\nPrzykładowe wiadomości HAM (CATEGORY = 0):")
-ham_examples = df[df['CATEGORY'] == 0].sample(n=3, random_state=20)
-for i, row in ham_examples.iterrows():
-    print(f"\n--- Przykład {i} (długość: {row['length']} znaków) ---")
-    print(row['MESSAGE'][:500] + "..." if len(row['MESSAGE']) > 500 else row['MESSAGE'])
-
-
-# In[54]:
-
-
-# === 1. Wykres słupkowy rozkładu klas ===
-plt.figure(figsize=(8, 6))
-sns.countplot(data=df, x='CATEGORY', hue='CATEGORY', legend=False, palette={0: 'blue', 1: 'red'})
-plt.title('Rozkład klas (0 = ham, 1 = spam)')
-plt.xlabel('Klasa')
-plt.ylabel('Liczba wiadomości')
-plt.xticks([0, 1], ['Ham (0)', 'Spam (1)'])
-for i, count in enumerate(df['CATEGORY'].value_counts().sort_index()):
-    plt.text(i, count + 10, str(count), ha='center', fontsize=12)
-plt.tight_layout()
-plt.show()
-
-
-# In[39]:
-
-
-x_cut = df['length'].quantile(0.96)
-df_cut = df[df['length'] <= x_cut]
-
-fig, axes = plt.subplots(1, 2, figsize=(14, 5), sharey=True)
-
-sns.histplot(
-    data=df_cut[df_cut['CATEGORY'] == 0],
-    x='length',
-    bins=30,
-    ax=axes[0],
-    color='tab:blue'
-)
-axes[0].set_title('Ham')
-axes[0].set_xlabel('Długość wiadomości')
-axes[0].set_ylabel('Liczba wiadomości')
-
-sns.histplot(
-    data=df_cut[df_cut['CATEGORY'] == 1],
-    x='length',
-    bins=30,
-    ax=axes[1],
-    color='tab:red'
-)
-axes[1].set_title('Spam')
-axes[1].set_xlabel('Długość wiadomości')
-
-plt.tight_layout()
-plt.show()
-
-
-# In[45]:
-
-
-# === 3. Chmura słów dla spam i ham ===
-fig, axs = plt.subplots(1, 2, figsize=(16, 8))
-spam_text = ' '.join(df[df['CATEGORY'] == 1]['MESSAGE'].astype(str))
-ham_text  = ' '.join(df[df['CATEGORY'] == 0]['MESSAGE'].astype(str))
-
-# Ham
-wordcloud_ham = WordCloud(width=800, height=400, background_color='white',
-                          colormap='Blues', max_words=200).generate(ham_text)
-axs[0].imshow(wordcloud_ham, interpolation='bilinear')
-axs[0].set_title('Chmura słów – HAM', fontsize=16)
-axs[0].axis('off')
-# Spam
-wordcloud_spam = WordCloud(width=800, height=400, background_color='white',
-                           colormap='Reds', max_words=200).generate(spam_text)
-axs[1].imshow(wordcloud_spam, interpolation='bilinear')
-axs[1].set_title('Chmura słów – SPAM', fontsize=16)
-axs[1].axis('off')
-
-plt.tight_layout()
-plt.show()
-
-
-# In[9]:
-
-
 nlp = spacy.load('en_core_web_sm')
-
-
-# In[4]:
-
-
-def preprocessing(text):
-    """
-    Pipeline przetwarzania tekstu:
-    1. Konwersja do małych liter
-    2. Usunięcie znaków specjalnych i cyfr
-    3. Usunięcie nadmiarowych spacji
-    4. Tokenizacja + usunięcie stop words + lematyzacja
-    5. Połączenie tokenów w jeden string (dla klasyfikacji tekstu)
-    """
-    text = text.lower()
-    text = nlp(text)
-    tokens = [token for token in text if token.is_alpha]
-    tokens = [token.lemma_ for token in tokens]
-    tokens = [ token for token in tokens if token not in STOP_WORDS]
-
-    return ' '.join(tokens)
-
-
-# In[10]:
-
-
-# Test funkcji na jednej wiadomości
-print("Przykład przed:")
-print(df['MESSAGE'].iat[0][:500])
-print("\nPrzykład po:")
-print(preprocessing(df['MESSAGE'].iat[0])[:500])
-
-
-# In[11]:
-
-
-# Zastosowanie pipeline do całego zbioru
-print("\nPrzetwarzanie całego zbioru (może chwilę potrwać)...")
-df['clean_message'] = df['MESSAGE'].apply(preprocessing)
-
-
-# In[13]:
-
-
-# Podgląd wyników
-print(df[['CATEGORY', 'MESSAGE', 'clean_message']].head())
-
-
-# In[22]:
-
-
 vec = CountVectorizer()
 X = vec.fit_transform(df['clean_message'])
 y = df['CATEGORY']
@@ -855,7 +644,7 @@ best_lgbm = random_search.best_estimator_
 
 
 # =====================================
-# 5. Finalna ewaluacja na hold-out teście
+# 5. Finalna ewaluacja na teście
 # =====================================
 
 print("\n=== Ewaluacja najlepszego modelu LightGBM na zbiorze testowym ===")
@@ -867,13 +656,6 @@ print(f"F1-weighted:   {f1_score(y_test, y_pred, average='weighted'):.4f}\n")
 print("Classification Report:")
 print(classification_report(y_test, y_pred, target_names=['HAM (0)', 'SPAM (1)'], digits=4))
 
-
-# In[150]:
-
-
-# =====================================
-# 6. Zapis modelu
-# =====================================
 
 joblib.dump(best_lgbm, 'best_lightgbm_tuned.pkl')
 

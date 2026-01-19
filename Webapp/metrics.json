@@ -1,0 +1,30 @@
+{
+    "Multinomial Naive Bayes": {
+        "accuracy": 0.9618,
+        "precision": 0.9968,
+        "recall": 0.8807,
+        "f1_score": 0.9351,
+        "confusion_matrix": [[757, 16], [42, 310]]
+    },
+    "Logistic Regression": {
+        "accuracy": 0.9636,
+        "precision": 0.9844,
+        "recall": 0.8977,
+        "f1_score": 0.9391,
+        "confusion_matrix": [[757, 16], [36, 316]]
+    },
+    "LightGBM": {
+        "accuracy": 0.9769,
+        "precision": 0.9553,
+        "recall": 0.9716,
+        "f1_score": 0.9634,
+        "confusion_matrix": [[757, 16], [10, 342]]
+    },
+    "LightGBM (stuningowany)": {
+        "accuracy": 0.9822,
+        "precision": 0.9798,
+        "recall": 0.9631,
+        "f1_score": 0.9822,
+        "confusion_matrix": [[766, 7], [13, 339]]
+    }
+}
