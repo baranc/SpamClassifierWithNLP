@@ -1,5 +1,5 @@
 ### Uruchomienie aplikacji
-
+W katalogu Webapp
 ```bash
 streamlit run app.py
 ```
